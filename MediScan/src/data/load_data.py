@@ -5,6 +5,7 @@ BASE_DIR = Path(__file__).resolve().parents[2]   # MediScan/
 DATA_DIR = BASE_DIR / "data" / "raw-data"
 
 def load_all_data():
+    print("data loaded successfully.")
     return {
         "main": pd.read_csv(DATA_DIR / "dataset.csv"),
         "severity": pd.read_csv(DATA_DIR / "Symptom-severity.csv"),

@@ -1,5 +1,5 @@
 import pandas as pd
-def symptoms_extract(X : pd.DataFrame):
+def symptoms_extract(X : pd.DataFrame ):
     all_symptoms = set() # to sort all unique symptoms 
     for col in X:
         all_symptoms.update(X[col].unique()) # get the unique symptoms and put it in the all_symtoms 
@@ -8,15 +8,13 @@ def symptoms_extract(X : pd.DataFrame):
     print(len(all_symptoms))
     return all_symptoms
 
-def x_data_proccessing(X : pd.DataFrame , all_symptoms :set):
-    X_processed = pd.DataFrame(0 , index = X.index , columns= sorted(all_symptoms))
-    for col in X.columns:
-        X[col] = X[col].astype(str)
-        valid = X[col].isin(all_symptoms)
-        X_processed.loc[valid, X.loc[valid, col]] = 1
+def x_encoding(X : pd.DataFrame):
+    from sklearn.preprocessing import MultiLabelBinarizer
+    mlb = MultiLabelBinarizer()
+    symptoms_list = X.apply(lambda row: row.dropna().tolist(), axis=1)
+    X_processed = mlb.fit_transform(symptoms_list)
+    print("X encoding is complete sucessfully.")
     return X_processed
-
-
 def y_scaler(y: pd.Series):
     from sklearn.preprocessing import LabelEncoder
     encoder = LabelEncoder()
