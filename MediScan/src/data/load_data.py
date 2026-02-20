@@ -1,14 +1,11 @@
 import pandas as pd
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parents[2]   # MediScan/
-DATA_DIR = BASE_DIR / "data" / "raw-data"
-
-def load_all_data():
+def load_data(DATA_DIR):
     print("data loaded successfully.")
-    return {
-        "main": pd.read_csv(DATA_DIR / "dataset.csv"),
-        "severity": pd.read_csv(DATA_DIR / "Symptom-severity.csv"),
-        "description": pd.read_csv(DATA_DIR / "symptom_Description.csv"),
-        "precaution": pd.read_csv(DATA_DIR / "symptom_precaution.csv"),
-    }
+    main =  pd.read_csv(DATA_DIR / "dataset.csv")
+    return main
+def load_detail_data(DATA_DIR):
+                description =  pd.read_csv(DATA_DIR / "symptom_Description.csv"),
+                precaution =  pd.read_csv(DATA_DIR / "symptom_precaution.csv"),
+                homecare =  pd.read_csv(DATA_DIR / "disease_homecare_data.csv")
+                return description , precaution , homecare
+        

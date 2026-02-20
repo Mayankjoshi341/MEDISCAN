@@ -1,0 +1,42 @@
+disease_name,home_remedy_1,home_remedy_2,home_remedy_3,severity_level,reaction_advice
+Drug Reaction,Stop suspected drug (if safe),Cold compress for rash,Hydration,Level 4 - Serious,See doctor immediately; emergency if breathing difficulty
+Malaria,Stay hydrated,Rest,Light nutritious diet,Level 4 - Serious,Immediate medical diagnosis and antimalarial treatment required
+Allergy,Avoid trigger,Steam inhalation,Antihistamine (doctor advised),Level 2 - Mild,Seek doctor if swelling or breathing difficulty
+Hypothyroidism,Iodine-rich diet,Regular exercise,Stress management,Level 3 - Moderate,Consult endocrinologist; long-term medication needed
+Psoriasis,Moisturize skin,Oatmeal bath,Aloe vera gel,Level 2 - Mild,See dermatologist if severe flare
+GERD,Avoid spicy food,Eat small meals,Elevate head while sleeping,Level 2 - Mild,Doctor visit if persistent
+Chronic cholestasis,Low-fat diet,Hydration,Avoid alcohol,Level 4 - Serious,Urgent liver specialist consultation
+hepatitis A,Rest,Hydration,Avoid fatty food,Level 3 - Moderate,Medical supervision required
+Osteoarthristis,Hot compress,Light exercise,Turmeric milk,Level 2 - Mild,Orthopedic consult if pain worsens
+(vertigo) Paroymsal Positional Vertigo,Epley maneuver,Avoid sudden head movement,Hydration,Level 3 - Moderate,Doctor visit if frequent
+Hypoglycemia,Consume sugar,Fruit juice,Glucose tablets,Level 4 - Serious,Immediate correction; emergency if unconscious
+Acne,Wash face regularly,Aloe vera,Avoid oily food,Level 1 - Very Mild,Dermatologist if severe
+Diabetes,Low sugar diet,Regular exercise,Monitor glucose,Level 4 - Serious,Regular medical management mandatory
+Impetigo,Clean affected area,Apply prescribed ointment,Avoid scratching,Level 3 - Moderate,Doctor visit required
+Hypertension,Low salt diet,Exercise,Stress control,Level 4 - Serious,Regular monitoring; emergency if very high BP
+Peptic ulcer disease,Avoid spicy food,Eat small meals,Reduce stress,Level 3 - Moderate,Doctor evaluation needed
+Dimorphic hemorrhoids(piles),High fiber diet,Warm sitz bath,Hydration,Level 2 - Mild,Doctor if bleeding severe
+Common Cold,Steam inhalation,Warm fluids,Rest,Level 1 - Very Mild,Self care; doctor if persists >5 days
+Chicken pox,Calamine lotion,Oatmeal bath,Rest,Level 3 - Moderate,Doctor supervision required
+Cervical spondylosis,Neck exercises,Hot compress,Correct posture,Level 2 - Mild,Physiotherapy consult
+Hyperthyroidism,Avoid excess iodine,Stress control,Regular monitoring,Level 4 - Serious,Endocrinologist consultation
+Urinary tract infection,Drink water,Cranberry juice,Maintain hygiene,Level 3 - Moderate,Doctor for antibiotics
+Varicose veins,Leg elevation,Compression stockings,Avoid prolonged standing,Level 2 - Mild,Doctor if pain severe
+AIDS,Nutritious diet,Infection prevention,Mental health support,Level 5 - Critical,Strict antiretroviral therapy required
+Paralysis (brain hemorrhage),None (Emergency),Keep patient stable,Do not move head,Level 5 - Critical,Call emergency services immediately
+Typhoid,Hydration,Soft diet,Rest,Level 4 - Serious,Immediate antibiotic treatment
+Hepatitis B,Avoid alcohol,Healthy diet,Rest,Level 4 - Serious,Liver specialist consultation
+Fungal infection,Keep area dry,Antifungal cream,Loose clothing,Level 2 - Mild,Doctor if persistent
+Hepatitis C,Avoid alcohol,Healthy diet,Rest,Level 4 - Serious,Specialist treatment required
+Migraine,Dark quiet room,Cold compress,Hydration,Level 3 - Moderate,Doctor if frequent/severe
+Bronchial Asthma,Steam inhalation,Avoid triggers,Use inhaler (prescribed),Level 4 - Serious,Emergency if breathing difficulty
+Alcoholic hepatitis,Stop alcohol,Healthy diet,Hydration,Level 5 - Critical,Immediate medical care required
+Jaundice,Hydration,Sugarcane juice,Rest,Level 3 - Moderate,Doctor supervision required
+Hepatitis E,Rest,Hydration,Avoid fatty food,Level 3 - Moderate,Medical monitoring required
+Dengue,Hydration,Papaya leaf extract (supportive),Rest,Level 4 - Serious,Immediate platelet monitoring
+Hepatitis D,Avoid alcohol,Healthy diet,Rest,Level 4 - Serious,Specialist treatment needed
+Heart attack,None (Emergency),Aspirin (if advised),Call emergency,Level 5 - Critical,Immediate hospital care required
+Pneumonia,Steam inhalation,Rest,Hydration,Level 4 - Serious,Doctor immediately; antibiotics required
+Arthritis,Warm compress,Exercise,Anti-inflammatory diet,Level 3 - Moderate,Rheumatologist consult
+Gastroenteritis,ORS,Hydration,Light diet,Level 3 - Moderate,Doctor if dehydration severe
+Tuberculosis,Nutritious diet,Isolation,Rest,Level 5 - Critical,Strict anti-TB treatment mandatory

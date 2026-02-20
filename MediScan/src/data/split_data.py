@@ -11,5 +11,4 @@ def features_split(main_df: pd.DataFrame, target_col="disease"):
     X = main_df[feature_cols]
     y = main_df[target_col]
     print("features split is complete successfully.")
-
     return X, y
