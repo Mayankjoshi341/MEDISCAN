@@ -7,7 +7,7 @@ from src.utils.config import PROCESSED_DATA_DIR , MODELS_DIR
 def test_run():
 
     # load the model
-    model = load(MODELS_DIR / "best_mediscan.pkl")
+    model = load(MODELS_DIR / "best_mediscan_model.pkl")
 
     #load the test data
     test_data = pd.read_csv(PROCESSED_DATA_DIR/"test_data.csv")

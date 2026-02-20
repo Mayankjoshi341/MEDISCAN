@@ -48,10 +48,10 @@ if st.button("Predict"):
     else:
         input_data = input_sysptoms(selected_symptoms)
         input_vector = transform_input(input_data , x_transformer)
-        prediction = predicted_disease(model,input_vector,y_transformer)
+        prediction = predicted_disease(input_vector,model , y_transformer)
         top_3_pred = top_3_predictions(input_vector , model , y_transformer)
 
-        st.subheader(f"🔍 Predicted Disease: **{prediction}**")
+        st.subheader(f"🔍 Predicted Disease: **{prediction[0]}**")
         try:
             st.subheader("Description")
             Description = disease_description(Description_df , prediction)
@@ -117,7 +117,7 @@ if st.button("Predict"):
                                "Fungal infection": "dermatology hospital", "Hepatitis C": "liver hospital", "Migraine": "neurology hospital", "Bronchial Asthma": "pulmonology hospital", "Alcoholic hepatitis": "liver hospital",
                                "Jaundice": "liver hospital",  "Hepatitis E": "liver hospital",  "Dengue": "infectious disease hospital","Hepatitis D": "liver hospital",  "Heart attack": "cardiology hospital",  "Pneumonia": "pulmonology hospital",
                                "Arthritis": "rheumatology hospital",  "Gastroenteritis": "gastroenterology hospital", "Tuberculosis": "chest hospital"  }
-        Keyword = disease_to_keywords[precaution]
+        Keyword = disease_to_keywords[prediction[0]]
         
         #seting us the api
         my_key = st.secrets["GOOGLE_MAPS_API_KEY"]
