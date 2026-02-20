@@ -16,9 +16,9 @@ from src.utils.config import MODELS_DIR , RAW_DATA_DIR
 from src.data.load_data import load_detail_data
 from src.prediction.processing_input import input_sysptoms , transform_input
 from src.prediction.prediction import disease_description, disease_precautions , predicted_disease, home_remedies , top_3_predictions
-model = load(MODELS_DIR/"")
-x_transformer = load(MODELS_DIR/"")
-y_transformer = load(MODELS_DIR/"")
+model = load(MODELS_DIR/"best_mediscan_model.pkl")
+x_transformer = load(MODELS_DIR/"X_transformer.pkl")
+y_transformer = load(MODELS_DIR/"Y_transfomer.pkl")
 
 Description_df , precautions_df , homecare_df  = load_detail_data(RAW_DATA_DIR)
 

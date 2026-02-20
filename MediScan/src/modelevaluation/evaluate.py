@@ -1,6 +1,7 @@
 from sklearn.metrics import accuracy_score , classification_report , confusion_matrix , recall_score
-def model_evaluate(x_test , y_test , model):
+def model_evaluate(model , x_test , y_test):
     full_report = {}
+    print("Tuned model type:", type(model))
     y_pred = model.predict(x_test)
     acc_score = accuracy_score(y_true=y_test , y_pred= y_pred)
     class_report = classification_report(y_true=y_test , y_pred= y_pred)

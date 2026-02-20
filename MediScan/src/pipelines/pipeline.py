@@ -28,11 +28,11 @@ def full_pipeline():
     X_train , X_test , y_train , y_test = train_test_split_data(X , y)
 
     X_train_df = X_train.copy()
-    X_train_df["Disease"] = y_train.values()
+    X_train_df["Disease"] = y_train
     X_train_df.to_csv(PROCESSED_DATA_DIR/"train.csv")
 
     X_test_df = X_test.copy()
-    X_test_df["Disease"] = y_test.values()
+    X_test_df["Disease"] = y_test
     X_test_df.to_csv(PROCESSED_DATA_DIR/"test.csv")
 
 
@@ -57,6 +57,9 @@ def full_pipeline():
     # hyperparameter tuning
     lr_model, lr_score, lr_params= tune_logistic_regression(X_train_encoded , y_train_scaled)
     rf_model, rf_score, rf_params = tune_random_forest(X_train_encoded , y_train_scaled)
+    print("Type LR:", type(lr_model))
+    print("Type RF:", type(rf_model))
+
     tuned_model = best_hyperparameters(lr_model, lr_score ,rf_model, rf_score)
     
     joblib.dump(tuned_model ,  MODELS_DIR/"best_mediscan_model.pkl")
