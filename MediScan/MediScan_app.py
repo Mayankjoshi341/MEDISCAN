@@ -107,9 +107,6 @@ if st.button("Predict"):
                 except Exception as e:
                     st.error("Failed to send email.")
                     st.write(e)
-        #seting us the api
-        my_key = st.secrets["GOOGLE_MAPS_API_KEY"]
-        gmaps =  googlemaps.Client(key = my_key)
 
         #dict to find the hospital according to the dieseas
         disease_to_keywords = {"Drug Reaction": "emergency hospital","Malaria": "infectious disease hospital","Allergy": "allergy specialist hospital","Hypothyroidism": "endocrinology hospital","Psoriasis": "dermatology hospital","GERD": "gastroenterology hospital",
@@ -121,21 +118,24 @@ if st.button("Predict"):
                                "Jaundice": "liver hospital",  "Hepatitis E": "liver hospital",  "Dengue": "infectious disease hospital","Hepatitis D": "liver hospital",  "Heart attack": "cardiology hospital",  "Pneumonia": "pulmonology hospital",
                                "Arthritis": "rheumatology hospital",  "Gastroenteritis": "gastroenterology hospital", "Tuberculosis": "chest hospital"  }
         Keyword = disease_to_keywords[precaution]
+        
+        #seting us the api
+        my_key = st.secrets["GOOGLE_MAPS_API_KEY"]
+        gmaps =  googlemaps.Client(key = my_key)
 
         #geting the palces
-        hospital_results = gmaps.places_nearby(
+        hospital_results = gmaps.places_nearby( # type: ignore
                        location=(lat, log),
                        keyword = Keyword,
                        radius=3000,   # set range for better resultes 
                        type="hospital")
         print("api called")
-
         #displaying the reults
         hospitals = []
         for hospital in hospital_results["results"]:
 
             name = hospital.get("name")
-            rating = hospital.get("rating" , "N\A")
+            rating = hospital.get("rating" , "NA")
             address = hospital.get("vicinity")
             latitude = hospital["geometry"]["location"]["lat"]
             longitude=  hospital["geometry"]["location"]["lng"]
