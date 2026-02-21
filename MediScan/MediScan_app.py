@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import math
 import streamlit as st
 from joblib import load
 
@@ -16,9 +17,15 @@ from src.utils.config import MODELS_DIR , RAW_DATA_DIR
 from src.data.load_data import load_detail_data
 from src.prediction.processing_input import input_sysptoms , transform_input
 from src.prediction.prediction import disease_description, disease_precautions , predicted_disease, home_remedies , top_3_predictions
-model = load(MODELS_DIR/"best_mediscan_model.pkl")
-x_transformer = load(MODELS_DIR/"X_transformer.pkl")
-y_transformer = load(MODELS_DIR/"Y_transfomer.pkl")
+
+@st.cache_resource
+def load_models():
+    model = load(MODELS_DIR/"best_mediscan_model.pkl")
+    x_transformer = load(MODELS_DIR/"X_transformer.pkl")
+    y_transformer = load(MODELS_DIR/"Y_transfomer.pkl")
+    return model, x_transformer, y_transformer
+
+model, x_transformer, y_transformer = load_models()
 
 Description_df , precautions_df , homecare_df  = load_detail_data(RAW_DATA_DIR)
 
@@ -38,8 +45,29 @@ coords = streamlit_js_eval(
     """,
     key="get_location"
 )
-lat = coords['latitude']
-log = coords['longitude']
+if coords:
+    lat = coords['latitude']
+    lng = coords['longitude']
+else:
+    st.warning("Location access denied. Using default location.")
+    lat, lng = 28.6139, 77.2090  # Default: Delhi
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    R = 6371  # Earth radius in KM
+
+    d_lat = math.radians(lat2 - lat1)
+    d_lon = math.radians(lon2 - lon1)
+
+    a = (
+        math.sin(d_lat/2)**2 +
+        math.cos(math.radians(lat1)) *
+        math.cos(math.radians(lat2)) *
+        math.sin(d_lon/2)**2
+    )
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c
+
 # Multiselect from trained symptom list
 selected_symptoms = st.multiselect("Choose your symptoms:", x_transformer.classes_)
 if st.button("Predict"):
@@ -47,147 +75,165 @@ if st.button("Predict"):
         st.warning("⚠️ Please select at least one symptom.")
     else:
         input_data = input_sysptoms(selected_symptoms)
-        input_vector = transform_input(input_data , x_transformer)
-        prediction = predicted_disease(input_vector,model , y_transformer)
-        top_3_pred = top_3_predictions(input_vector , model , y_transformer)
+        input_vector = transform_input(input_data, x_transformer)
 
-        st.subheader(f"🔍 Predicted Disease: **{prediction[0]}**")
-        try:
-            st.subheader("Description")
-            Description = disease_description(Description_df , prediction)
-            st.write(Description)
-            st.subheader("Precautions to keep in mind")
+        decoded_pred, prediction = predicted_disease(
+            input_vector, model, y_transformer
+        )
 
-            Precaution_list = disease_precautions(precautions_df , prediction)
-            for i, precaution in enumerate(Precaution_list, 1):
-                st.write(f"{i}. {precaution}")
-                         
-            st.subheader("Recommended home remedies ")
-            remedies , severity_level , reaction_advice = home_remedies(homecare_df , prediction)
-            for i, remedie in enumerate(Precaution_list, 1):
-                st.write(f"{i}. {remedie}")
-            st.subheader("severity_level")
-            st.write(severity_level)
-            
-            st.subheader("Reaction advive to do now ")
-            st.write(reaction_advice)
-        except:
-            st.write("Nothing to show here")
-        with st.expander("Disclaimer"):
-             st.error("The information provided here is for educational purposes only and not a substitute for professional medical advice.")
+        top_3_pred = top_3_predictions(
+            input_vector, model, y_transformer
+        )
 
-        
-        st.subheader("Top Predictions")
-
-        for disease, prob in top_3_pred:
-            st.write(f"🔹 **{disease}** — {prob*100:.2f}%")
-        def is_valid_gmail(email):
-            pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
-            return re.match(pattern, email) is not None
+        st.session_state["decoded_pred"] = decoded_pred
+        st.session_state["top_3_pred"] = top_3_pred
 
 
-        if st.button("Send Health Report"):
+# ================= DISPLAY PREDICTION =================
+if "decoded_pred" in st.session_state:
 
-            receiver_gmail = st.text_input("Enter your Gmail address:",
-            placeholder="example@gmail.com")
+    decoded_pred = st.session_state["decoded_pred"]
+    top_3_pred = st.session_state["top_3_pred"]
 
-        if st.button("Confirm & Send"):
+    st.subheader(f"🔍 Predicted Disease: **{decoded_pred}**")
 
+    try:
+        st.subheader("Description")
+        Description = disease_description(Description_df, decoded_pred)
+        st.write(Description)
+
+        st.subheader("Precautions to keep in mind")
+        Precaution_list = disease_precautions(precautions_df, decoded_pred)
+        for i, precaution in enumerate(Precaution_list, 1):
+            st.write(f"{i}. {precaution}")
+
+        st.subheader("Recommended home remedies")
+        remedies, severity_level, reaction_advice = home_remedies(
+            homecare_df, decoded_pred
+        )
+        for i, remedie in enumerate(remedies, 1):
+            st.write(f"{i}. {remedie}")
+
+        st.subheader("Severity Level")
+        st.write(severity_level)
+
+        st.subheader("Immediate Advice")
+        st.write(reaction_advice)
+
+    except:
+        st.write("Nothing to show here")
+
+    with st.expander("Disclaimer"):
+        st.error(
+            "The information provided here is for educational purposes only and not a substitute for professional medical advice."
+        )
+
+    # -------- Top 3 ----------
+    st.subheader("Top Predictions")
+    for disease, prob in top_3_pred:
+        st.write(f"🔹 **{disease}** — {prob*100:.2f}%")
+
+    # ================= EMAIL FORM =================
+    """def is_valid_gmail(email):
+        pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
+        return re.match(pattern, email) is not None
+
+    with st.form("email_form"):
+        receiver_gmail = st.text_input(
+            "Enter your Gmail address:",
+            placeholder="example@gmail.com"
+        )
+
+        submit_email = st.form_submit_button("Send Health Report")
+
+        if submit_email:
             if not receiver_gmail:
                 st.error("Please enter your Gmail.")
-
             elif not is_valid_gmail(receiver_gmail):
                 st.error("Invalid Gmail address.")
-
             else:
-                try:
-                    #Email_sender()
-                    st.success("📧 Report sent successfully!")
+                st.success("📧 Report sent successfully!")
+"""
+    # ================= HOSPITAL LOGIC =================
 
-                except Exception as e:
-                    st.error("Failed to send email.")
-                    st.write(e)
+    disease_to_keywords = {"Drug Reaction": "emergency hospital","Malaria": "infectious disease hospital","Allergy": "allergy specialist hospital","Hypothyroidism": "endocrinology hospital","Psoriasis": "dermatology hospital","GERD": "gastroenterology hospital",
+                                   "Chronic cholestasis": "liver hospital", "hepatitis A": "liver hospital", "Osteoarthristis": "orthopedic hospital", "(vertigo) Paroymsal Positional Vertigo": "neurology hospital", "Hypoglycemia": "endocrinology hospital",
+                                   "Acne": "skin hospital","Diabetes": "diabetes specialist hospital","Impetigo": "skin infection hospital","Hypertension": "cardiology hospital","Peptic ulcer diseae": "gastroenterology hospital","Dimorphic hemorrhoids(piles)": "gastroenterology hospital",
+                                   "Common Cold": "general hospital", "Chicken pox": "infectious disease hospital", "Cervical spondylosis": "orthopedic hospital", "Hyperthyroidism": "endocrinology hospital", "Urinary tract infection": "urology hospital",
+                                   "Varicose veins": "vascular surgery hospital","AIDS": "infectious disease hospital","Paralysis (brain hemorrhage)": "neurology hospital","Typhoid": "infectious disease hospital","Hepatitis B": "liver hospital",
+                                   "Fungal infection": "dermatology hospital", "Hepatitis C": "liver hospital", "Migraine": "neurology hospital", "Bronchial Asthma": "pulmonology hospital", "Alcoholic hepatitis": "liver hospital",
+                                   "Jaundice": "liver hospital",  "Hepatitis E": "liver hospital",  "Dengue": "infectious disease hospital","Hepatitis D": "liver hospital",  "Heart attack": "cardiology hospital",  "Pneumonia": "pulmonology hospital",
+                                   "Arthritis": "rheumatology hospital",  "Gastroenteritis": "gastroenterology hospital", "Tuberculosis": "chest hospital"  }
 
-        #dict to find the hospital according to the dieseas
-        disease_to_keywords = {"Drug Reaction": "emergency hospital","Malaria": "infectious disease hospital","Allergy": "allergy specialist hospital","Hypothyroidism": "endocrinology hospital","Psoriasis": "dermatology hospital","GERD": "gastroenterology hospital",
-                               "Chronic cholestasis": "liver hospital", "hepatitis A": "liver hospital", "Osteoarthristis": "orthopedic hospital", "(vertigo) Paroymsal Positional Vertigo": "neurology hospital", "Hypoglycemia": "endocrinology hospital",
-                               "Acne": "skin hospital","Diabetes": "diabetes specialist hospital","Impetigo": "skin infection hospital","Hypertension": "cardiology hospital","Peptic ulcer diseae": "gastroenterology hospital","Dimorphic hemorrhoids(piles)": "gastroenterology hospital",
-                               "Common Cold": "general hospital", "Chicken pox": "infectious disease hospital", "Cervical spondylosis": "orthopedic hospital", "Hyperthyroidism": "endocrinology hospital", "Urinary tract infection": "urology hospital",
-                               "Varicose veins": "vascular surgery hospital","AIDS": "infectious disease hospital","Paralysis (brain hemorrhage)": "neurology hospital","Typhoid": "infectious disease hospital","Hepatitis B": "liver hospital",
-                               "Fungal infection": "dermatology hospital", "Hepatitis C": "liver hospital", "Migraine": "neurology hospital", "Bronchial Asthma": "pulmonology hospital", "Alcoholic hepatitis": "liver hospital",
-                               "Jaundice": "liver hospital",  "Hepatitis E": "liver hospital",  "Dengue": "infectious disease hospital","Hepatitis D": "liver hospital",  "Heart attack": "cardiology hospital",  "Pneumonia": "pulmonology hospital",
-                               "Arthritis": "rheumatology hospital",  "Gastroenteritis": "gastroenterology hospital", "Tuberculosis": "chest hospital"  }
-        Keyword = disease_to_keywords[prediction[0]]
-        
-        #seting us the api
+    Keyword = disease_to_keywords.get(decoded_pred, "hospital")
+
+    if st.button("Find Nearby Hospitals"):
+
         my_key = st.secrets["GOOGLE_MAPS_API_KEY"]
-        gmaps =  googlemaps.Client(key = my_key)
+        gmaps = googlemaps.Client(key=my_key)
 
-        #geting the palces
         hospital_results = gmaps.places_nearby( # type: ignore
-                       location=(lat, log),
-                       keyword = Keyword,
-                       radius=3000,   # set range for better resultes 
-                       type="hospital")
-        print("api called")
-        #displaying the reults
-        hospitals = []
-        for hospital in hospital_results["results"]:
+            location=(lat, lng),
+            keyword=Keyword,
+            radius=3000,
+            type="hospital"
+        )
 
+        hospitals = []
+
+        for hospital in hospital_results["results"]:
             name = hospital.get("name")
-            rating = hospital.get("rating" , "NA")
+            rating = hospital.get("rating")
             address = hospital.get("vicinity")
             latitude = hospital["geometry"]["location"]["lat"]
-            longitude=  hospital["geometry"]["location"]["lng"]
+            longitude = hospital["geometry"]["location"]["lng"]
             total_rating = hospital.get("user_ratings_total", 0)
 
-            if rating < 3.5:
+            if not rating or rating < 3.5 or total_rating < 30:
                 continue
-            if total_rating < 30:
-                continue
-            if "clinic" in name.lower() or "diagnostic" in name.lower() or "pathology" in name.lower():
-                continue
-
+            distance = calculate_distance(lat, lng, latitude, longitude)
+            
             hospitals.append({
                 "name": name,
                 "rating": rating,
-                "total rating" : total_rating,
                 "address": address,
                 "latitude": latitude,
-                "longitude": longitude
+                "longitude": longitude,
+                "distance": distance
             })
+        hospitals = sorted(hospitals, key=lambda x: x["distance"])
+        st.session_state["hospitals"] = hospitals
 
+# ================= DISPLAY HOSPITALS =================
+if "hospitals" in st.session_state:
 
-        col1 ,col2 = st.columns(spec=[0.4 , 0.6] , gap= "small" ,  vertical_alignment= "center" , border= True)
-        with col1:
-                st.subheader("List Of Nearest Hospitals")
-                for h in hospitals:
-                            st.write(f"**{h['name']}**")
-                            st.write(f"⭐ {h['rating']} | 📍 {h['address']}")
-                            #st.markdown(f"[Open in Maps](https://www.google.com/maps/search/?api=1&query={h['lat']},{h['lng']})", unsafe_allow_html=True)
-                            st.markdown("---")
-        with col2:
-            st.subheader("Map View")
-            m = folium.Map(location=[lat,log], zoom_start=13)
+    hospitals = st.session_state["hospitals"]
 
-            # Add user marker
+    col1, col2 = st.columns([0.4, 0.6])
+
+    with col1:
+        st.subheader("List Of Nearest Hospitals")
+        for h in hospitals:
+            st.write(f"**{h['name']}**")
+            st.write(
+            f"⭐ {h['rating']} | 📍 {h['address']} | "f"📏 {h['distance']:.2f} km away")      
+            st.markdown("---")
+
+    with col2:
+        st.subheader("Map View")
+        m = folium.Map(location=[lat, lng], zoom_start=13)
+
+        folium.Marker(
+            [lat, lng],
+            tooltip="You are here",
+            icon=folium.Icon(color="blue")
+        ).add_to(m)
+
+        for h in hospitals:
             folium.Marker(
-                [lat, log],
-                tooltip="You are here",
-                icon=folium.Icon(color="blue", icon="user")
+                [h["latitude"], h["longitude"]],
+                tooltip=h["name"],
+                popup=h["name"]
             ).add_to(m)
-            
-            # Add hospital markers
-            for h in hospitals:
-                folium.Marker(
-                    [h["latitude"], h["longitude"]],
-                    tooltip=h["name"],
-                    popup=h["name"]  
-                ).add_to(m)
-            
-            # Render map in Streamlit
-            map_data = st_folium(m, width=700, height=500)
 
-
-
-        
+        st_folium(m, width=700, height=500)

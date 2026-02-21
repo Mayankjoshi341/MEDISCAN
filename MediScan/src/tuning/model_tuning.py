@@ -2,14 +2,12 @@ from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
 import numpy as np
 
 def model_selection(X , y):
     models = {"logistic regression" : LogisticRegression(max_iter= 100),
            "Decision tree " : DecisionTreeClassifier(),
-           "Random Forest" : RandomForestClassifier(),
-           "XG-Boost" : XGBClassifier()}
+           "Random Forest" : RandomForestClassifier()}
     model_evaluate_dis = {}
     for name ,model in models.items():
         model.fit(X , y)

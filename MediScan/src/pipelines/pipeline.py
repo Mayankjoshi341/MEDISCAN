@@ -20,6 +20,7 @@ def full_pipeline():
     # clean the data
     cleaned_df = data_clean(main_df)
     cleaned_df.to_csv(PROCESSED_DATA_DIR/"cleaned_data.csv")
+    
     # split the data
     X , y = features_split(cleaned_df)
 
