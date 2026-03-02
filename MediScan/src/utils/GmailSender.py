@@ -1,8 +1,8 @@
-import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Dict
+import streamlit as st
 
 
 def send_health_report_email(
@@ -21,8 +21,8 @@ def send_health_report_email(
     Sends a professional health report email.
     """
 
-    sender_email = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASS")
+    sender_email = st.secrets["EMAIL_USER"]
+    password = st.secrets["EMAIL_PASS"]
 
     if not sender_email or not password:
         raise ValueError("Email credentials not found in environment variables.")
@@ -38,14 +38,14 @@ def send_health_report_email(
             </tr>
         """
 
-        for pred in top3_predictions:
+        for disease, prob in top3_predictions:
             prediction_section += f"""
             <tr>
                 <td style="padding:8px; border:1px solid #ddd;">
-                    {pred['disease']}
+                    {disease}
                 </td>
                 <td style="padding:8px; border:1px solid #ddd;">
-                    {pred['probability']}
+                    {prob*100:.2f}%
                 </td>
             </tr>
             """
@@ -58,21 +58,27 @@ def send_health_report_email(
     hospital_section = ""
     if hospital_list:
         hospital_section += """
-        <h3 style="color:#B03A2E;">Nearby Hospitals</h3>
-        <ul>
-        """
-
+        <h3 style="color:#B03A2E;">🏥 Nearby Recommended Hospitals</h3>"""
         for hospital in hospital_list:
-            hospital_section += f"""
-            <li>
-                <b>{hospital['name']}</b><br>
-                <a href="{hospital['url']}" style="color:#2E86C1; text-decoration:none;">
-                    Open in Google Maps
-                </a>
-            </li>
-            """
-
-        hospital_section += "</ul>"
+              hospital_section += f"""
+              <div style="border:1px solid #E5E7E9; padding:12px; margin-bottom:10px; border-radius:6px;">
+                  <p style="margin:0; font-weight:bold; font-size:16px;">
+                      {hospital.get('name', 'N/A')}
+                  </p>
+                  <p style="margin:4px 0;">
+                      ⭐ Rating: {hospital.get('rating', 'N/A')}
+                  </p>
+                  <p style="margin:4px 0;">
+                      📍 Address: {hospital.get('address', 'N/A')}
+                  </p>
+                  <p style="margin:6px 0;">
+                      <a href="{hospital.get('url')}"
+                         style="color:#2E86C1; text-decoration:none; font-weight:bold;">
+                         View on Google Maps
+                      </a>
+                  </p>
+              </div>
+              """
 
     body = f"""
     <html>
