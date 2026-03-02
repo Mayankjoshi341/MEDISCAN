@@ -1,7 +1,7 @@
 import pandas as pd
-def load_data(DATA_DIR):
+def load_data(RAW_DATA_DIR):
     print("data loaded successfully.")
-    main =  pd.read_csv(DATA_DIR / "dataset.csv")
+    main =  pd.read_csv(RAW_DATA_DIR / "dataset.csv")
     return main
 def load_detail_data(RAW_DATA_DIR):
                 description =  pd.read_csv(RAW_DATA_DIR / "symptom_Description.csv")
