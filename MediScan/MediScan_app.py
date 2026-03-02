@@ -12,7 +12,7 @@ from streamlit_js_eval import streamlit_js_eval
 
 import googlemaps
 
-from src.utils.GmailSender import Email_sender
+from src.utils.GmailSender import send_health_report_email
 from src.utils.config import MODELS_DIR , RAW_DATA_DIR 
 from src.data.load_data import load_detail_data
 from src.prediction.processing_input import input_sysptoms , transform_input
@@ -133,27 +133,6 @@ if "decoded_pred" in st.session_state:
     for disease, prob in top_3_pred:
         st.write(f"🔹 **{disease}** — {prob*100:.2f}%")
 
-    # ================= EMAIL FORM =================
-    """def is_valid_gmail(email):
-        pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
-        return re.match(pattern, email) is not None
-
-    with st.form("email_form"):
-        receiver_gmail = st.text_input(
-            "Enter your Gmail address:",
-            placeholder="example@gmail.com"
-        )
-
-        submit_email = st.form_submit_button("Send Health Report")
-
-        if submit_email:
-            if not receiver_gmail:
-                st.error("Please enter your Gmail.")
-            elif not is_valid_gmail(receiver_gmail):
-                st.error("Invalid Gmail address.")
-            else:
-                st.success("📧 Report sent successfully!")
-"""
     # ================= HOSPITAL LOGIC =================
 
     disease_to_keywords = {"Drug Reaction": "emergency hospital","Malaria": "infectious disease hospital","Allergy": "allergy specialist hospital","Hypothyroidism": "endocrinology hospital","Psoriasis": "dermatology hospital","GERD": "gastroenterology hospital",
@@ -175,7 +154,7 @@ if "decoded_pred" in st.session_state:
         hospital_results = gmaps.places_nearby( # type: ignore
             location=(lat, lng),
             keyword=Keyword,
-            radius=3000,
+            radius=4000,
             type="hospital"
         )
 
@@ -188,6 +167,12 @@ if "decoded_pred" in st.session_state:
             latitude = hospital["geometry"]["location"]["lat"]
             longitude = hospital["geometry"]["location"]["lng"]
             total_rating = hospital.get("user_ratings_total", 0)
+            place_id = hospital["place_id"]
+
+        hospital_urls = []
+        for place_id in enumerate(hospital_results["results"]):
+            maps_url = f"https://www.google.com/maps/search/?api=1&query=Google&query_place_id={place_id[1]['place_id']}"
+            hospital_urls.append(maps_url)
 
             if not rating or rating < 3.5 or total_rating < 30:
                 continue
@@ -203,6 +188,38 @@ if "decoded_pred" in st.session_state:
             })
         hospitals = sorted(hospitals, key=lambda x: x["distance"])
         st.session_state["hospitals"] = hospitals
+    
+        # ================= EMAIL FORM =================
+    def is_valid_gmail(email):
+        pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
+        return re.match(pattern, email) is not None
+
+    with st.form("email_form"):
+        receiver_gmail = st.text_input(
+            "Enter your Gmail address:",
+            placeholder="example@gmail.com"
+        )
+
+        submit_email = st.form_submit_button("Send Health Report")
+
+        if submit_email:
+            if not receiver_gmail:
+                st.error("Please enter your Gmail.")
+            elif not is_valid_gmail(receiver_gmail):
+                st.error("Invalid Gmail address.")
+            else:
+                send_health_report_email(
+                    receiver_email=receiver_gmail,
+                    symptoms=selected_symptoms,
+                    disease=decoded_pred,
+                    description=Description,
+                    precautions=Precaution_list,
+                    home_remedy=remedies[0] if remedies else "N/A",
+                    severity_level=severity_level,
+                    reaction_advice=reaction_advice,
+                    hospital_list=hospital_urls[:3],
+                    top3_predictions= top_3_pred)               
+                st.success("📧 Report sent successfully!")
 
 # ================= DISPLAY HOSPITALS =================
 if "hospitals" in st.session_state:
@@ -237,3 +254,5 @@ if "hospitals" in st.session_state:
             ).add_to(m)
 
         st_folium(m, width=700, height=500)
+
+    
