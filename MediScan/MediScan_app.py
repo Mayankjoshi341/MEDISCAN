@@ -96,6 +96,10 @@ if "decoded_pred" in st.session_state:
     top_3_pred = st.session_state["top_3_pred"]
 
     st.subheader(f"🔍 Predicted Disease: **{decoded_pred}**")
+    # -------- Top 3 ----------
+    st.subheader("Top Predictions")
+    for disease, prob in top_3_pred:
+        st.write(f"🔹 **{disease}** — {prob*100:.2f}%")
 
     try:
         st.subheader("Description")
@@ -128,10 +132,6 @@ if "decoded_pred" in st.session_state:
             "The information provided here is for educational purposes only and not a substitute for professional medical advice."
         )
 
-    # -------- Top 3 ----------
-    st.subheader("Top Predictions")
-    for disease, prob in top_3_pred:
-        st.write(f"🔹 **{disease}** — {prob*100:.2f}%")
 
     # ================= HOSPITAL LOGIC =================
 
@@ -154,7 +154,7 @@ if "decoded_pred" in st.session_state:
         hospital_results = gmaps.places_nearby( # type: ignore
             location=(lat, lng),
             keyword=Keyword,
-            radius=4000,
+            radius=3000,
             type="hospital"
         )
 
@@ -167,18 +167,11 @@ if "decoded_pred" in st.session_state:
             latitude = hospital["geometry"]["location"]["lat"]
             longitude = hospital["geometry"]["location"]["lng"]
             total_rating = hospital.get("user_ratings_total", 0)
-            place_id = hospital["place_id"]
-
-        hospital_urls = []
-        for place_id in enumerate(hospital_results["results"]):
-            maps_url = f"https://www.google.com/maps/search/?api=1&query=Google&query_place_id={place_id[1]['place_id']}"
-            hospital_urls.append(maps_url)
-
             if not rating or rating < 3.5 or total_rating < 30:
-                continue
+               continue
             distance = calculate_distance(lat, lng, latitude, longitude)
             
-            hospitals.append({
+        hospitals.append({
                 "name": name,
                 "rating": rating,
                 "address": address,
@@ -187,7 +180,9 @@ if "decoded_pred" in st.session_state:
                 "distance": distance
             })
         hospitals = sorted(hospitals, key=lambda x: x["distance"])
+        print(hospitals)
         st.session_state["hospitals"] = hospitals
+        st.session_state["hospital_results"] = hospital_results
     
         # ================= EMAIL FORM =================
     def is_valid_gmail(email):
@@ -208,6 +203,28 @@ if "decoded_pred" in st.session_state:
             elif not is_valid_gmail(receiver_gmail):
                 st.error("Invalid Gmail address.")
             else:
+                hospital_list = []
+
+                hospital_results = st.session_state.get("hospital_results")
+
+                if hospital_results:
+                    for hospital in hospital_results.get("results", [])[:3]:
+                        name = hospital.get("name")
+                        place_id = hospital.get("place_id")
+
+                        if name and place_id:
+                            maps_url = (
+                                f"https://www.google.com/maps/search/"
+                                f"?api=1&query=Google&query_place_id={place_id}"
+                            )
+
+                            hospital_list.append({
+                                "name": name,
+                                "rating": hospital.get("rating", "N/A"),
+                                "address": hospital.get("vicinity", "N/A"),
+                                "url": maps_url
+                            })
+                    print(f"Hospital: {name}, Maps URL: {maps_url}")
                 send_health_report_email(
                     receiver_email=receiver_gmail,
                     symptoms=selected_symptoms,
@@ -217,7 +234,7 @@ if "decoded_pred" in st.session_state:
                     home_remedy=remedies[0] if remedies else "N/A",
                     severity_level=severity_level,
                     reaction_advice=reaction_advice,
-                    hospital_list=hospital_urls[:3],
+                    hospital_list=hospital_list,
                     top3_predictions= top_3_pred)               
                 st.success("📧 Report sent successfully!")
 
