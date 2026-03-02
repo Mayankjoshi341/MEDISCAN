@@ -30,7 +30,7 @@ def disease_precautions(precautions_df , disease_name):
         precautions_list.append(row['Precaution_2'])
         precautions_list.append(row['Precaution_3'])
     return precautions_list
-def home_remedies(homecare_df : pd.DataFrame , disease_name):
+def home_remedies(homecare_df : pd.DataFrame , disease_name : str):
     disease_row = homecare_df[homecare_df["disease_name"] == disease_name]
     remedies = []
     for index , row in disease_row.iterrows():
