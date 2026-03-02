@@ -1,84 +1,150 @@
-def Email_sender(receiver_gmail : str, sym_1, sym_2, sym_3,
-                 disease, description, precaution_1, precaution_2, precaution_3, precaution_4, home_remedy):
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-    sender_gmail = "mediscan.report25@gmail.com"
-    password = "ydwu jrlk ufcf dqcw"
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from typing import List, Dict
 
-    msg = MIMEMultipart("alternative")
-    msg["From"] = sender_gmail
-    msg["To"] = receiver_gmail
-    msg["Subject"] = "🩺 MediScan – Your Health Insights Based on Symptoms"
+
+def send_health_report_email(
+    receiver_email: str,
+    symptoms: List[str],
+    disease: str,
+    top3_predictions: List[Dict[str, str]],  # [{"disease": "...", "probability": "..."}]
+    description: str,
+    precautions: List[str],
+    home_remedy: str,
+    severity_level: str,
+    reaction_advice: str,
+    hospital_list: List[Dict[str, str]],  # [{"name": "...", "url": "..."}]
+):
+    """
+    Sends a professional health report email.
+    """
+
+    sender_email = os.getenv("EMAIL_USER")
+    password = os.getenv("EMAIL_PASS")
+
+    if not sender_email or not password:
+        raise ValueError("Email credentials not found in environment variables.")
+
+    prediction_section = ""
+    if top3_predictions:
+        prediction_section += """
+        <h3 style="color:#884EA0;">Top 3 Possible Conditions (AI Confidence)</h3>
+        <table width="100%" style="border-collapse: collapse;">
+            <tr style="background-color:#F2F3F4;">
+                <th align="left" style="padding:8px; border:1px solid #ddd;">Condition</th>
+                <th align="left" style="padding:8px; border:1px solid #ddd;">Probability</th>
+            </tr>
+        """
+
+        for pred in top3_predictions:
+            prediction_section += f"""
+            <tr>
+                <td style="padding:8px; border:1px solid #ddd;">
+                    {pred['disease']}
+                </td>
+                <td style="padding:8px; border:1px solid #ddd;">
+                    {pred['probability']}
+                </td>
+            </tr>
+            """
+
+        prediction_section += "</table>"
+
+    # -------------------------------
+    # Hospital Section
+    # -------------------------------
+    hospital_section = ""
+    if hospital_list:
+        hospital_section += """
+        <h3 style="color:#B03A2E;">Nearby Hospitals</h3>
+        <ul>
+        """
+
+        for hospital in hospital_list:
+            hospital_section += f"""
+            <li>
+                <b>{hospital['name']}</b><br>
+                <a href="{hospital['url']}" style="color:#2E86C1; text-decoration:none;">
+                    Open in Google Maps
+                </a>
+            </li>
+            """
+
+        hospital_section += "</ul>"
 
     body = f"""
     <html>
       <body style="font-family: Arial, sans-serif; color:#333;">
-        <div style="max-width:600px; margin:auto; padding:20px; border:1px solid #ddd; border-radius:10px;">
-          <div style="text-align:center;">
-            <img src="https://yourdomain.com/mediscan-logo.png" alt="MediScan" width="150" style="margin-bottom:20px;"/>
-            <h2 style="color:#2E86C1;">Welcome to MediScan</h2>
-          </div>
-          <p>Hi there 👋,</p>
-          <p>Based on the <b>symptoms you provided</b>, MediScan has analyzed possible conditions 
-             that might be affecting your health. Our AI-powered system ensures you get 
-             <b>personalized and reliable health insights</b>.</p>
+        <div style="max-width:600px; margin:auto; padding:20px;
+                    border:1px solid #ddd; border-radius:10px;">
 
-          <h3 style="color:#117A65;">Your Submitted Symptoms:</h3>
+          <h2 style="color:#2E86C1; text-align:center;">
+              🩺 MediScan Health Report
+          </h2>
+
+          <p>Hello,</p>
+          <p>
+              Based on the symptoms you provided, our AI system has generated
+              the following health insights.
+          </p>
+
+          <h3 style="color:#117A65;">Submitted Symptoms</h3>
           <ul>
-            <li>{sym_1}</li>
-            <li>{sym_2 or "-"}</li>
-            <li>{sym_3 or "-"}</li>
+              {''.join(f"<li>{s}</li>" for s in symptoms)}
           </ul>
 
-          <h3 style="color:#CB4335;">Possible Health Condition:</h3>
+          <h3 style="color:#CB4335;">Possible Condition</h3>
           <p><b>{disease}</b></p>
 
-          <h3 style="color:#6C3483;">Condition Overview:</h3>
+          <h3 style="color:#6C3483;">Condition Overview</h3>
           <p>{description}</p>
 
-          <h3 style="color:#AF601A;">Recommended Precautions:</h3>
+          <h3 style="color:#AF601A;">Severity Level</h3>
+          <p><b>{severity_level}</b></p>
+
+          <h3 style="color:#1F618D;">Recommended Action</h3>
+          <p>{reaction_advice}</p>
+
+          <h3 style="color:#AF601A;">Precautions</h3>
           <ul>
-            <li>{precaution_1}</li>
-            <li>{precaution_2}</li>
-            <li>{precaution_3}</li>
-            <li>{precaution_4}</li>
+              {''.join(f"<li>{p}</li>" for p in precautions)}
           </ul>
 
-          <h3 style="color:#1F618D;">Suggested Home Remedy:</h3>
+          <h3 style="color:#1F618D;">Suggested Home Remedy</h3>
           <p>{home_remedy}</p>
 
-          <p>📷 You can also <b>upload photos</b> of visible symptoms (e.g., skin rashes, throat) directly in the app for a more accurate analysis.</p>
-          <p>🔗 Learn more on our website: 
-            <a href="https://yourdomain.com/learn-more" style="color:#2E86C1;">MediScan Health Portal</a>
+          {hospital_section}
+
+          <hr style="margin-top:30px;">
+
+          <p style="font-size:12px; color:#777;">
+              ⚠️ Disclaimer: This report is AI-generated and is not a substitute
+              for professional medical advice. Please consult a qualified doctor
+              for accurate diagnosis and treatment.
           </p>
-          <div style="margin-top:30px; text-align:center;">
-            <a href="https://yourdomain.com/app-download" 
-               style="background-color:#2E86C1; color:white; padding:12px 20px; 
-                      border-radius:5px; text-decoration:none; font-weight:bold;">
-              Download MediScan App
-            </a>
-          </div>
-          <p style="margin-top:30px; font-size:12px; color:#888; text-align:center;">
-            ⚠️ Note: MediScan provides health suggestions based on AI analysis. 
-            Always consult a doctor for a professional diagnosis.
-          </p>
+
         </div>
       </body>
     </html>
     """
 
-    msg.attach(MIMEText(body, "html"))
 
-    server = None
+    message = MIMEMultipart("alternative")
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message["Subject"] = "🩺 MediScan – Your Personalized Health Report"
+
+    message.attach(MIMEText(body, "html"))
+
     try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(sender_gmail, password)
-        server.sendmail(sender_gmail, receiver_gmail, msg.as_string())
-        print(f"Email sent successfully to {receiver_gmail}")
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
+
+        print(f"✅ Email sent successfully to {receiver_email}")
+
     except Exception as e:
-        print("Error:", e)
-    finally:
-        if server:
-            server.quit()
+        print("❌ Failed to send email:", e)
