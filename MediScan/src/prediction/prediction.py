@@ -37,7 +37,7 @@ def home_remedies(homecare_df : pd.DataFrame , disease_name):
         remedies.append(row["home_remedy_1"])
         remedies.append(row["home_remedy_2"])
         remedies.append(row["home_remedy_3"])
-    severity_level = disease_row["severity_level"].values()
-    reaction_advice = disease_row["reaction_advice"].values()
+    severity_level = disease_row["severity_level"].values[0]
+    reaction_advice = disease_row["reaction_advice"].values[0]
 
     return remedies , severity_level , reaction_advice
