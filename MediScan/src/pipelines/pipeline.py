@@ -58,8 +58,6 @@ def full_pipeline():
     # hyperparameter tuning
     lr_model, lr_score, lr_params= tune_logistic_regression(X_train_encoded , y_train_scaled)
     rf_model, rf_score, rf_params = tune_random_forest(X_train_encoded , y_train_scaled)
-    print("Type LR:", type(lr_model))
-    print("Type RF:", type(rf_model))
 
     tuned_model = best_hyperparameters(lr_model, lr_score ,rf_model, rf_score)
     
