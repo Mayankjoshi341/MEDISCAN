@@ -89,14 +89,12 @@ if st.button("Predict"):
         st.session_state["top_3_pred"] = top_3_pred
 
 
-# ================= DISPLAY PREDICTION =================
 if "decoded_pred" in st.session_state:
 
     decoded_pred = st.session_state["decoded_pred"]
     top_3_pred = st.session_state["top_3_pred"]
 
     st.subheader(f"🔍 Predicted Disease: **{decoded_pred}**")
-    # -------- Top 3 ----------
     st.subheader("Top Predictions")
     for disease, prob in top_3_pred:
         st.write(f"🔹 **{disease}** — {prob*100:.2f}%")
@@ -131,9 +129,6 @@ if "decoded_pred" in st.session_state:
         st.error(
             "The information provided here is for educational purposes only and not a substitute for professional medical advice."
         )
-
-
-    # ================= HOSPITAL LOGIC =================
 
     disease_to_keywords = {"Drug Reaction": "emergency hospital","Malaria": "infectious disease hospital","Allergy": "allergy specialist hospital","Hypothyroidism": "endocrinology hospital","Psoriasis": "dermatology hospital","GERD": "gastroenterology hospital",
                                    "Chronic cholestasis": "liver hospital", "hepatitis A": "liver hospital", "Osteoarthristis": "orthopedic hospital", "(vertigo) Paroymsal Positional Vertigo": "neurology hospital", "Hypoglycemia": "endocrinology hospital",
@@ -171,7 +166,7 @@ if "decoded_pred" in st.session_state:
                continue
             distance = calculate_distance(lat, lng, latitude, longitude)
             
-        hospitals.append({
+            hospitals.append({
                 "name": name,
                 "rating": rating,
                 "address": address,
@@ -179,12 +174,43 @@ if "decoded_pred" in st.session_state:
                 "longitude": longitude,
                 "distance": distance
             })
-        hospitals = sorted(hospitals, key=lambda x: x["distance"])
-        print(hospitals)
+        hospitals = sorted(hospitals, key=lambda x: x["distance"])[:5]
         st.session_state["hospitals"] = hospitals
         st.session_state["hospital_results"] = hospital_results
-    
-        # ================= EMAIL FORM =================
+if "hospitals" in st.session_state:
+
+    hospitals = st.session_state["hospitals"]
+
+    col1, col2 = st.columns([0.4, 0.6])
+
+    with col1:
+        st.subheader("List Of Nearest Hospitals")
+        for h in hospitals:
+            st.write(f"**{h['name']}**")
+            st.write(
+            f"⭐ {h['rating']} | 📍 {h['address']} | "f"📏 {h['distance']:.2f} km away")      
+            st.markdown("---")
+
+    with col2:
+        st.subheader("Map View")
+        m = folium.Map(location=[lat, lng], zoom_start=13)
+
+        folium.Marker(
+            [lat, lng],
+            tooltip="You are here",
+            icon=folium.Icon(color="blue")
+        ).add_to(m)
+        for h in hospitals:
+            if h["latitude"] and h["longitude"]:
+                folium.Marker(
+                    [h["latitude"], h["longitude"]],
+                    tooltip=h["name"],
+                    popup=h["name"],
+                    icon=folium.Icon(color="red")
+                ).add_to(m)
+        st_folium(m, width=700, height=500)
+
+        
     def is_valid_gmail(email):
         pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
         return re.match(pattern, email) is not None
@@ -238,38 +264,3 @@ if "decoded_pred" in st.session_state:
                     top3_predictions= top_3_pred)               
                 st.success("📧 Report sent successfully!")
 
-# ================= DISPLAY HOSPITALS =================
-if "hospitals" in st.session_state:
-
-    hospitals = st.session_state["hospitals"]
-
-    col1, col2 = st.columns([0.4, 0.6])
-
-    with col1:
-        st.subheader("List Of Nearest Hospitals")
-        for h in hospitals:
-            st.write(f"**{h['name']}**")
-            st.write(
-            f"⭐ {h['rating']} | 📍 {h['address']} | "f"📏 {h['distance']:.2f} km away")      
-            st.markdown("---")
-
-    with col2:
-        st.subheader("Map View")
-        m = folium.Map(location=[lat, lng], zoom_start=13)
-
-        folium.Marker(
-            [lat, lng],
-            tooltip="You are here",
-            icon=folium.Icon(color="blue")
-        ).add_to(m)
-
-        for h in hospitals:
-            folium.Marker(
-                [h["latitude"], h["longitude"]],
-                tooltip=h["name"],
-                popup=h["name"]
-            ).add_to(m)
-
-        st_folium(m, width=700, height=500)
-
-    
