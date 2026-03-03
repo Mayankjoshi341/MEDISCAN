@@ -174,7 +174,7 @@ if "decoded_pred" in st.session_state:
                 "longitude": longitude,
                 "distance": distance
             })
-        hospitals = sorted(hospitals, key=lambda x: x["distance"])[:5]
+        hospitals = sorted(hospitals, key=lambda x: x["distance"])[:3]
         st.session_state["hospitals"] = hospitals
         st.session_state["hospital_results"] = hospital_results
 if "hospitals" in st.session_state:
@@ -208,7 +208,7 @@ if "hospitals" in st.session_state:
                     popup=h["name"],
                     icon=folium.Icon(color="red")
                 ).add_to(m)
-        st_folium(m, width=700, height=500)
+        st_folium(m, width=700, height=600)
 
         
     def is_valid_gmail(email):
@@ -221,7 +221,7 @@ if "hospitals" in st.session_state:
             placeholder="example@gmail.com"
         )
 
-        submit_email = st.form_submit_button("Send Health Report")
+        submit_email = st.form_submit_button("Send Health Report to your Gamil")
 
         if submit_email:
             if not receiver_gmail:
