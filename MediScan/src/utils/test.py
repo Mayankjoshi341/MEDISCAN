@@ -20,7 +20,9 @@ def test_run():
 
     #features encoding
     x_test_encoded = x_test_encoding(X_test , X_tansformer)
+    print("X test encoding is complete sucessfully.")
     y_test_encoded = y_test_scaling(y_test , y_trasformer)
+    print("X test encoding is complete sucessfully.")
 
     #predict
     y_pred = model.predict(x_test_encoded)
